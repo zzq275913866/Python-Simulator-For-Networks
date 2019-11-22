@@ -1,13 +1,13 @@
-from Event import Event
-
-
-class Counter(Event):
+class Counter:
     def __init__(self, time):
         self.time = time
 
-    def execute(self, sim):
-        print('The time is %f'% sim.time)
+    def __lt__(self, obj2):
+        return self.time <= obj2.time
 
-        if (self.time < 10):
+    def execute(self, sim):
+        print('The time is %f' % sim.time)
+
+        if self.time < 10:
             self.time = self.time + 2
-            sim.insertEv(self)
+            sim.insert_ev(self)
