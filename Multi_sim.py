@@ -5,7 +5,7 @@ random.seed(1)
 
 doc = open('new_delay.txt', 'w')
 data_set = open('dataset.txt', 'a')
-throughout = open('throughout.txt', 'w')
+throughput = open('throughput.txt', 'w')
 
 # topology:
 # n1----n2---n3---n4---n5
@@ -150,5 +150,5 @@ for i in G:
 sim.doAllEvents()
 doc.close()
 data_set.close()
-print(Nodelist[1].throughout/(sim.sim_limit*1000), file=throughout)
-throughout.close()
+print(Nodelist[1].throughout/(sim.sim_limit*1000), file=throughput)
+throughput.close()
