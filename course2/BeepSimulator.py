@@ -1,21 +1,19 @@
-from Beep import Beep
-from EventList import EventList
 from Simulator import Simulator
+from Beep import Beep
+
 
 sim = Simulator()
 
-sim.event_list = EventList()
+sim.insert_ev(Beep(4.0))
 
-sim.insertEv(Beep(4.0))
+sim.insert_ev(Beep(6.0))
 
-sim.insertEv(Beep(6.0))
+sim.insert_ev(Beep(6.2))
 
-sim.insertEv(Beep(6.2))
+sim.insert_ev(Beep(5))
 
-sim.insertEv(Beep(5))
+sim.insert_ev(Beep(2))
 
-sim.insertEv(Beep(2))
+sim.insert_ev(Beep(1))
 
-sim.insertEv(Beep(1))
-
-sim.doAllEvents()
+sim.do_all_events()

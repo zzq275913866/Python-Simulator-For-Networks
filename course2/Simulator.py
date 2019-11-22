@@ -1,17 +1,19 @@
+from EventList import EventList
+
+
 class Simulator:
     time = 0
-    event_list=[]
+    event_list = EventList()
 
     def now(self):
         return self.time
 
-    def insertEv(self,ev):
+    def insert_ev(self, ev):
         self.event_list.ins(ev)
 
-    def doAllEvents(self):
-        ev = self.event_list.removefirst()
+    def do_all_events(self):
+        ev = self.event_list.remove_first()
         while ev is not None:
             self.time = ev.time
             ev.execute(self)
-            ev = self.event_list.removefirst()
-
+            ev = self.event_list.remove_first()
