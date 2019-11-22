@@ -1,82 +1,63 @@
-import abc
 import random
+import bisect
 import heapq as hq
-
-
-class Event:
-    time = 0
-
-    def lt(self, obj2):
-        return (self.time <= obj2.time)
-
-    @abc.abstractmethod
-    def execute(self, sim):
-        pass
 
 
 class EventList:
     elements = []
 
     def ins(self, x):
-        i = 1
-        length = len(self.elements)
-        while (i <= length and (self.elements[i-1].time < x.time)):
-            i = i + 1
+        bisect.insort(self.elements, x)
 
+    def remove_first(self):
         if len(self.elements) == 0:
-            self.elements.append(x)
-        else:
-            self.elements.insert(i-1, x)
-
-    def removefirst(self):
-
-        if len(self.elements) == 0:
-            ev = []
             return
-
-        ev = self.elements[0]
-        del self.elements[0]
+        ev = self.elements.pop(0)
         return ev
 
 
 class Node:
-    doc = ''
+    doc = open('new_delay.txt', 'w')
     d = []
     weight_g = None
     node = None
     throughout = 0
 
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, _id):
+        self.id = _id
         self.interface = {}
         self.rt = {}
         self.q = {}
 
-    def handlePacket(self, packet, sim):
+    def handle_packet(self, packet, sim):
         if packet.dest == self.id:
             soj_t = sim.now() - packet.created
-            A = [packet.srt, packet.dest, soj_t]
+            a = [packet.srt, packet.dest, soj_t]
             # print('%f' % soj_t, file=self.doc)
             self.d.append(soj_t)
             Node.throughout += (packet.length/1000)
-            print(A[0], A[1], A[2], file=self.doc)
+            print(a[0], a[1], a[2], file=self.doc)
         else:
             index = packet.path.index(self.id)
             # packet.length = random.expovariate(0.001)
             self.rt[packet.dest] = packet.path[index + 1]
-            self.q[packet.path[index + 1]].insertQ(packet, sim)
+            self.q[packet.path[index + 1]].insert_q(packet, sim)
 
 
-class GenePoisEv(Event):
+class GenePoisEv:
     node = None
     weight_g = None
     next_node = None
-    rate = None
 
-    def __init__(self, id, dest):
-        self.id = id
+    def __init__(self, _id, dest):
+        self.id = _id
         self.dest = dest
         self.path = ''
+        self.time = 0
+        self.rate = 0
+
+    def __lt__(self, obj2):
+        return self.time <= obj2.time
 
     def execute(self, sim):
         packet = Packet(self.time)
@@ -96,24 +77,24 @@ class GenePoisEv(Event):
                 for j in self.weight_g[i]:
                     self.weight_g[i][j] = 1 / (self.node[i].q[j].s.bw / 1000 - arr_rate[i][j])
 
-            P = {}
+            r = {}
             for i in self.weight_g:
                 dis = {i: 0}
                 pre = {i: None}
                 for j in self.weight_g:
                     if j != i:
                         dis[j] = float("inf")
-                S = set()
+                s = set()
                 p_queue = []
                 hq.heappush(p_queue, (0, i))
                 while len(p_queue) > 0:
                     min_v = hq.heappop(p_queue)
                     dist = min_v[0]
                     u = min_v[1]
-                    S.add(u)
+                    s.add(u)
                     adj_nodes = self.weight_g[u].keys()
                     for v in adj_nodes:
-                        if v not in S:
+                        if v not in s:
                             if dist + self.weight_g[u][v] < dis[v]:
                                 if (dis[v], v) not in p_queue:
                                     dis[v] = dist + self.weight_g[u][v]
@@ -140,7 +121,7 @@ class GenePoisEv(Event):
                     while parent is not i:
                         parent = pre[parent]
                         path[v].insert(0, parent)
-                P[i] = path
+                r[i] = path
 
             # self.next_node = {}
             # for i in self.weight_g:
@@ -160,22 +141,21 @@ class GenePoisEv(Event):
             #         else:
             #             self.node[i].rt[j] = self.next_node[i][j]
 
-            p = P[self.id][self.dest]
+            p = r[self.id][self.dest]
             self.path = p
             for i in range(len(p) - 1):
                 self.node[p[i]].q[p[i+1]].s.arr_rate += self.rate
 
         packet.path = self.path
-        self.node[packet.srt].handlePacket(packet, sim)
-        interarrivalTime = random.expovariate(self.rate)
-        self.time = self.time + interarrivalTime
-        sim.insertEv(self)
+        self.node[packet.srt].handle_packet(packet, sim)
+        inter_arrival_time = random.expovariate(self.rate)
+        self.time = self.time + inter_arrival_time
+        sim.insert_ev(self)
 
 
 class Packet:
     def __init__(self, created):
         self.created = created
-        self.sent = ''
         self.srt = ''
         self.dest = ''
         self.length = ''
@@ -187,19 +167,18 @@ class Que:
         self.que = []
         self.s = ''
 
-    def insertQ(self, packet, sim):
+    def insert_q(self, packet, sim):
         if self.s.packetBeingServed is None:
-            self.s.insertServ(packet, sim)
+            self.s.insert_serv(packet, sim)
         else:
             self.que.append(packet)
 
     def remove(self):
-        pac = self.que[0]
-        del self.que[0]
+        pac = self.que.pop(0)
         return pac
 
 
-class ServExpEv(Event):
+class ServExpEv:
 
     def __init__(self):
         self.packetBeingServed = None
@@ -207,21 +186,25 @@ class ServExpEv(Event):
         self.bw = 4 * (10**5)
         self.node = None
         self.arr_rate = 0
+        self.time = 0
+
+    def __lt__(self, obj2):
+        return self.time <= obj2.time
 
     def execute(self, sim):
         sim.time = self.time
-        self.node.handlePacket(self.packetBeingServed, sim)
+        self.node.handle_packet(self.packetBeingServed, sim)
         self.packetBeingServed = None
 
         if len(self.q.que) != 0:
             packet = self.q.remove()
-            self.insertServ(packet, sim)
+            self.insert_serv(packet, sim)
 
-    def insertServ(self, packet, sim):
+    def insert_serv(self, packet, sim):
         self.packetBeingServed = packet
-        serviceTime = self.packetBeingServed.length / self.bw
-        self.time = sim.now() + serviceTime
-        sim.insertEv(self)
+        service_time = self.packetBeingServed.length / self.bw
+        self.time = sim.now() + service_time
+        sim.insert_ev(self)
 
 
 class Simulator:
@@ -232,11 +215,11 @@ class Simulator:
     def now(self):
         return self.time
 
-    def insertEv(self, ev):
+    def insert_ev(self, ev):
         self.event_list.ins(ev)
 
-    def doAllEvents(self):
-        ev = self.event_list.removefirst()
+    def do_all_events(self):
+        ev = self.event_list.remove_first()
         while ev is not None:
             self.time = ev.time
 
@@ -244,41 +227,45 @@ class Simulator:
                 break
 
             ev.execute(self)
-            ev = self.event_list.removefirst()
+            ev = self.event_list.remove_first()
 
 
-class Beep(Event):
+class Beep:
+    time = 0
+    data_set = open('data_set.txt', 'a')
     node = None
-    data_set = ''
     sim_limit = None
     next_node = None
     weight_g = None
 
+    def __lt__(self, obj2):
+        return self.time <= obj2.time
+
     def execute(self, sim):
-        Q_length = []
+        q_length = []
         for i in self.weight_g:
             for j in self.weight_g[i]:
                 if len(self.node[i].q[j].que) == 0:
                     if self.node[i].q[j].s.packetBeingServed is None:
-                        Q_length.append(0)
+                        q_length.append(0)
                     else:
-                        Q_length.append(self.node[i].q[j].s.packetBeingServed.length)
+                        q_length.append(self.node[i].q[j].s.packetBeingServed.length)
                 else:
                     all_paclen = self.node[i].q[j].s.packetBeingServed.length
                     for k in range(len(self.node[i].q[j].que)):
                         all_paclen += self.node[i].q[j].que[k].length
-                    Q_length.append(all_paclen)
-        dataset = {}
+                    q_length.append(all_paclen)
+        data_set = {}
         for i in self.weight_g:
-            dataset[i] = {}
+            data_set[i] = {}
             for j in list(self.weight_g.keys())[0:16]:
                 if j != i:
-                    dataset[i][j] = [i, j]
-                    dataset[i][j].extend(Q_length)
-                    dataset[i][j].append(self.node[i].rt[j])
-                    for k in range(len(dataset[i][j])-1):
-                        print(dataset[i][j][k], end=' ', file=self.data_set)
-                    print(dataset[i][j][len(dataset[i][j])-1], end='', file=self.data_set)
+                    data_set[i][j] = [i, j]
+                    data_set[i][j].extend(q_length)
+                    data_set[i][j].append(self.node[i].rt[j])
+                    for k in range(len(data_set[i][j])-1):
+                        print(data_set[i][j][k], end=' ', file=self.data_set)
+                    print(data_set[i][j][len(data_set[i][j])-1], end='', file=self.data_set)
                     print('\n', end='', file=self.data_set)
         interval = 0.2
         self.time = self.time + interval
@@ -286,50 +273,51 @@ class Beep(Event):
             sim.insertEv(self)
 
 
-class Calcuroute(Event):
+class Calcuroute:
+    time = 0
     node = None
     sim_limit = None
     next_node = None
     weight_g = None
 
     def execute(self, sim):
-        Q_length = {}
+        q_length = {}
         for i in self.weight_g:
-            Q_length[i] = {}
+            q_length[i] = {}
             for j in self.weight_g[i]:
                 if len(self.node[i].q[j].que) == 0:
                     if self.node[i].q[j].s.packetBeingServed is None:
-                        Q_length[i][j] = 0
+                        q_length[i][j] = 0
                     else:
-                        Q_length[i][j] = self.node[i].q[j].s.packetBeingServed.length
+                        q_length[i][j] = self.node[i].q[j].s.packetBeingServed.length
                 else:
                     all_paclen = self.node[i].q[j].s.packetBeingServed.length
                     for k in range(len(self.node[i].q[j].que)):
                         all_paclen += self.node[i].q[j].que[k].length
-                    Q_length[i][j] = all_paclen
+                    q_length[i][j] = all_paclen
 
         for i in self.weight_g:
             for j in self.weight_g[i]:
-                self.weight_g[i][j] = (1000 + Q_length[i][j]) / self.node[i].q[j].s.bw
+                self.weight_g[i][j] = (1000 + q_length[i][j]) / self.node[i].q[j].s.bw
 
-        P = {}
+        r = {}
         for i in self.weight_g:
             dis = {i: 0}
             pre = {i: None}
             for j in self.weight_g:
                 if j != i:
                     dis[j] = float("inf")
-            S = set()
+            s = set()
             p_queue = []
             hq.heappush(p_queue, (0, i))
             while len(p_queue) > 0:
                 min_v = hq.heappop(p_queue)
                 dist = min_v[0]
                 u = min_v[1]
-                S.add(u)
+                s.add(u)
                 adj_nodes = self.weight_g[u].keys()
                 for v in adj_nodes:
-                    if v not in S:
+                    if v not in s:
                         if dist + self.weight_g[u][v] < dis[v]:
                             if (dis[v], v) not in p_queue:
                                 dis[v] = dist + self.weight_g[u][v]
@@ -356,14 +344,14 @@ class Calcuroute(Event):
                 while parent is not i:
                     parent = pre[parent]
                     path[v].insert(0, parent)
-            P[i] = path
+            r[i] = path
 
         self.next_node = {}
         for i in self.weight_g:
             self.next_node[i] = {}
         for i in self.weight_g:
             for j in self.weight_g:
-                p = P[i][j]
+                p = r[i][j]
                 if isinstance(p, int):
                     self.next_node[i][j] = i
                 else:

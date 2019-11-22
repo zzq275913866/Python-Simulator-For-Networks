@@ -4,7 +4,7 @@ import dijkstra
 random.seed(1)
 
 doc = open('new_delay.txt', 'w')
-data_set = open('dataset.txt', 'a')
+data_set = open('data_set.txt', 'a')
 throughput = open('throughput.txt', 'w')
 
 # topology:
@@ -128,14 +128,13 @@ for i in weight_g:
         S[i][j].node = Nodelist[j]
 
 # 创建一个beep,定时获取数据
-B = Beep()
-B.sim_limit = 100
-B.time = 1.2
-B.node = Nodelist
-B.next_node = next_node
-B.weight_g = weight_g
-B.data_set = data_set
-sim.insertEv(B)
+# B = Beep()
+# B.sim_limit = 100
+# B.time = 1.2
+# B.node = Nodelist
+# B.next_node = next_node
+# B.weight_g = weight_g
+# sim.insert_ev(B)
 
 # R = Calcuroute()
 # R.sim_limit = 100
@@ -143,11 +142,11 @@ sim.insertEv(B)
 # R.node = Nodelist
 # R.next_node = next_node
 # R.weight_g = weight_g
-# sim.insertEv(R)
+# sim.insert_ev(R)
 
 for i in G:
-    sim.insertEv(G[i])
-sim.doAllEvents()
+    sim.insert_ev(G[i])
+sim.do_all_events()
 doc.close()
 data_set.close()
 print(Nodelist[1].throughout/(sim.sim_limit*1000), file=throughput)
