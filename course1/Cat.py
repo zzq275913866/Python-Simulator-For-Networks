@@ -1,6 +1,6 @@
-import Animal
-
-
-class Cat(Animal):
+class Cat:
     def __init__(self):
-        self._sound = '"Meow!"'
+        self._sound = "Meow!"
+
+    def make_sound(self):
+        print(self._sound)
