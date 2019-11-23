@@ -21,7 +21,7 @@ class Node:
     d = []
     weight_g = None
     node = None
-    throughout = 0
+    throughput = 0
 
     def __init__(self, _id):
         self.id = _id
@@ -35,7 +35,7 @@ class Node:
             a = [packet.srt, packet.dest, soj_t]
             # print('%f' % soj_t, file=self.doc)
             self.d.append(soj_t)
-            Node.throughout += (packet.length/1000)
+            Node.throughput += (packet.length/1000)
             print(a[0], a[1], a[2], file=self.doc)
         else:
             index = packet.path.index(self.id)
@@ -65,7 +65,7 @@ class GenePoisEv:
         # packet.srt = random.randint(1, len(self.node))
         packet.dest = self.dest
         packet.length = random.expovariate(0.001)
-        a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]  # 16条流产生的时间，在该时间重新计算路由
+        a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]  # 16鏉℃祦浜х敓鐨勬椂闂达紝鍦ㄨ鏃堕棿閲嶆柊璁＄畻璺敱
         if self.time in a:
             arr_rate = {}
             for i in self.weight_g:
