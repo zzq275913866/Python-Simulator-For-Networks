@@ -149,5 +149,5 @@ for i in G:
 sim.do_all_events()
 doc.close()
 data_set.close()
-print(Nodelist[1].throughout/(sim.sim_limit*1000), file=throughput)
+print(Nodelist[1].throughput/(sim.sim_limit*1000), file=throughput)
 throughput.close()
