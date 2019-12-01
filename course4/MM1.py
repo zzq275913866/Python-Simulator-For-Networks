@@ -18,7 +18,7 @@ class EventList:
 class Simulator:
     time = 0
     sim_limit = 0
-    event_list = ()
+    event_list = None
 
     def now(self):
         return self.time
@@ -37,7 +37,6 @@ class Simulator:
 
 
 class Packet:
-    created = ''
     sent = ''
 
     def __init__(self, created):
@@ -46,7 +45,7 @@ class Packet:
 
 class GenePoisEv:
     time = 0
-    q = ()
+    q = None
 
     def __lt__(self, obj2):
         return self.time <= obj2.time
@@ -62,7 +61,7 @@ class GenePoisEv:
 
 class Que:
     que = []
-    s = ()
+    s = None
 
     def insert_q(self, packet, sim):
         if self.s.packetBeingServed is None:
@@ -79,7 +78,7 @@ class ServExpEv:
     doc = open('out.txt', 'w')
     packetBeingServed = None
     time = 0
-    q = ()
+    q = None
 
     def __lt__(self, obj2):
         return self.time <= obj2.time
