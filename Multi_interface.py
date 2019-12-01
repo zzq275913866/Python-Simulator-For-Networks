@@ -100,9 +100,9 @@ class GenePoisEv:
                                     dis[v] = dist + self.weight_g[u][v]
                                     hq.heappush(p_queue, (dis[v], v))
                                 else:
-                                    index = p_queue.index((dis[v], v))
+                                    ind = p_queue.index((dis[v], v))
                                     dis[v] = dist + self.weight_g[u][v]
-                                    p_queue[index] = (dis[v], v)
+                                    p_queue[ind] = (dis[v], v)
                                 pre[v] = u
 
                 path = {}
@@ -165,7 +165,7 @@ class Packet:
 class Que:
     def __init__(self):
         self.que = []
-        self.s = ''
+        self.s = None
 
     def insert_q(self, packet, sim):
         if self.s.packetBeingServed is None:
@@ -182,7 +182,7 @@ class ServExpEv:
 
     def __init__(self):
         self.packetBeingServed = None
-        self.q = ''
+        self.q = None
         self.bw = 4 * (10**5)
         self.node = None
         self.arr_rate = 0
@@ -210,7 +210,7 @@ class ServExpEv:
 class Simulator:
     time = 0
     sim_limit = ''
-    event_list = []
+    event_list = None
 
     def now(self):
         return self.time
